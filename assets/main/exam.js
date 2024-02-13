@@ -12,6 +12,8 @@
 // random k bi trung lai oke 
 // 
 
+const PLAYER_STORAGE_KEY = 'USER_PLAYER';
+
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
@@ -42,7 +44,11 @@ const app = {
     isPlaying: false,
     isRandom: false,
     isRepeat: false,
-    isHover: false,
+    config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
+    setConfig: function(key, value) {
+        this.config[key] = value;
+        localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(this.config));
+    },
     listSongPlayed: [],
     songs: [
         {   
@@ -246,12 +252,14 @@ const app = {
         // Handle when click random btn (radom song)
         randomBtn.onclick = function(e) {
             _this.isRandom = !_this.isRandom;
+            _this.setConfig('isRandom', _this.isRandom);
             this.classList.toggle('active', _this.isRandom);
         }
 
         // Handle when click repeat btn (repeat song)
         repeatBtn.onclick = function() {
             _this.isRepeat = !_this.isRepeat;
+            _this.setConfig('isRepeat', _this.isRepeat);
             this.classList.toggle('active', _this.isRepeat);
         }
         
@@ -285,7 +293,7 @@ const app = {
         // Handle increase or decrease volume song
         volume.oninput = function() {
             const value = volume.value / 100;
-
+            _this.setConfig('volume', value);
             volumeVal.textContent = volume.value;
             audio.volume = value;
         }
@@ -310,7 +318,15 @@ const app = {
         $('.song.active').scrollIntoView(option1);
        
     },
-   
+    loadConfig: function() {
+        this.isRandom = this.config.isRandom;
+        this.isRepeat = this.config.isRepeat;
+
+        randomBtn.classList.toggle('active', this.isRandom);
+        repeatBtn.classList.toggle('active', this.isRepeat);
+
+        volume.value = this.config.volume * 100;  
+    },
     loadCurrentSong: function() {
         nameSong.textContent = this.currentSong.name;
         cdThumb.style.backgroundImage = `url(${this.currentSong.img})`;
@@ -353,6 +369,9 @@ const app = {
 
     },
     start: function() {
+
+        // Load config
+        this.loadConfig();
 
         // Define property in object
         this.defineProperties();
